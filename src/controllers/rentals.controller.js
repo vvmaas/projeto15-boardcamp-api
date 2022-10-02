@@ -2,11 +2,29 @@ import connection from '../database/db.js'
 import dayjs from 'dayjs'
 
 async function listRentals(req,res) {
+    let rentals = []
+    const customerId = req.query.customerId
+    const gameId = req.query.gameId
+
     try {
-        const rentals = await connection.query(
-            'SELECT rentals.*, customers.name AS "customerName", games.name AS "gameName", games."categoryId", categories.name AS "categoryName" FROM rentals JOIN customers ON customers.id=rentals."customerId" JOIN games ON games.id=rentals."gameId" JOIN categories ON categories.id=games."categoryId";'
-            )
-            console.log()
+        if (gameId && customerId){
+            rentals = await connection.query(
+                'SELECT rentals.*, customers.name AS "customerName", games.name AS "gameName", games."categoryId", categories.name AS "categoryName" FROM rentals JOIN customers ON customers.id=rentals."customerId" JOIN games ON games.id=rentals."gameId" JOIN categories ON categories.id=games."categoryId" WHERE "customerId" = $1 AND "gameId" = $2;',
+                [customerId, gameId])
+        } else if (gameId) {
+            rentals = await connection.query(
+                'SELECT rentals.*, customers.name AS "customerName", games.name AS "gameName", games."categoryId", categories.name AS "categoryName" FROM rentals JOIN customers ON customers.id=rentals."customerId" JOIN games ON games.id=rentals."gameId" JOIN categories ON categories.id=games."categoryId" WHERE "gameId" = $1;',
+                [gameId])
+        } else if (customerId) {
+            rentals = await connection.query(
+                'SELECT rentals.*, customers.name AS "customerName", games.name AS "gameName", games."categoryId", categories.name AS "categoryName" FROM rentals JOIN customers ON customers.id=rentals."customerId" JOIN games ON games.id=rentals."gameId" JOIN categories ON categories.id=games."categoryId" WHERE "customerId" = $1;',
+                [customerId])
+        } else {
+            rentals = await connection.query(
+                'SELECT rentals.*, customers.name AS "customerName", games.name AS "gameName", games."categoryId", categories.name AS "categoryName" FROM rentals JOIN customers ON customers.id=rentals."customerId" JOIN games ON games.id=rentals."gameId" JOIN categories ON categories.id=games."categoryId";'
+                )
+        }
+        
             res.send(rentals.rows)
     } catch (error) {
         console.log(error)
@@ -40,7 +58,7 @@ async function postRental(req,res){
 }
 
 async function endRental(req,res){
-    
+
 }
 
 async function deleteRental(req,res) {
